@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>CS 180 Project 4</title>
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600&family=Montserrat&display=swap" rel="stylesheet">        <meta charset="utf-8">
+        
+
+    <style>
+        body {
+            font-family: 'Montserrat';
+        }
+
+        p {
+            margin-left: 30px;
+            margin-right: 30px;
+            text-align: center;
+        }
+
+        figcaption {
+            text-align: center;
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        figure {
+            display: inline-block;
+        }
+
+        #title {
+            text-align: center;
+            font-size: 70px;
+            font-family: 'Kanit';
+            margin-bottom: -24px;
+        }
+
+        #subtitle {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        #section {
+            font-family: 'Kanit';
+            text-align: center;
+            background-color: rgb(50, 170, 50, 0.2);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        #subsection {
+            font-family: 'Montserrat';
+            text-align: center;
+            background-color: rgb(50, 150, 250, 0.2);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        #mag_small {
+            width: 160px;
+            height: 160px;
+            margin-left: 10px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        #big {
+            width: 320px;
+            margin-left: 30px;
+            margin-right: 30px;
+        }
+
+        #big_centered {
+            width: 320px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #margin_placeholder {
+            margin-left: calc(50% - 510px);
+        }
+    </style>
+    </head>
+    <body>
+        <h1 id="title">CS 180 PROJECT 4</h1>
+        <h1 id="subtitle">Xavier Plourde</div>
+        <h1 id="section">Project Overview</h1>
+        <p>This project involved finding correspondences between two images, computing a homography matrix for the two images and their correspondences, and transforming one of the images using the homography matrix in order to form a mosaic.</p>
+        <p>I had a lot of fun working on the project, and learned a lot about homography matrices and how panoramic images work.</p>
+        <h1 id="section">Recovering Homographies and Image Warping</h1>
+        <h2 id="subsection">Overview</h2>
+        <p>To start, I took three sets of images that I intended to warp into mosaics. Two of the image sets were taken specifically for the purposes of this project, and I took the other while traveling last summer.</p>
+        <p>I also found two images with noticeable shapes to rectify, both of which I took a few months before this project.</p>
+        <p>Then, I used the correspondence tool given to us in Project 3 to find correspondences between the images for the mosaic, and find the relevant points for the rectification images.</p>
+        <p>Specifically, my first two mosaics contained 3 images each. For these mosaics, I used the tool to find both the correspondences between the first image and the second image, and the second image and the third image. For the images I hoped to rectify, both contained windows taken at an angle, and I aimed to transform these images so that the windows would be transformed to a square shape for both images.</p>
+        <p>After finding these correspondence pairs for the mosaic images, I wrote a function to compute the homography matrix, H, given the correspondence pairs.</p>
+        <p>Specifically, I did this by manipulating the equation p' = Hp - transforming the first eight elements of H (all but the bottom right element, which is always 1) to a length-8 vector that we're trying to solve for. By manipulating the expression for H * p, we can add a matrix M that contains two entries for each correspondence point, and eight columns. We also create a vector b with two entries for each correspondence point, one entry each for the x-coordinate and y-coordinate, respectively. For every correspondence point pair, we can calculate the appropriate elements to put in its two corresponding rows, and we can solve for the equation Mh = b using least-squares, finding an optimal value of h, from which we can reconstruct the H matrix.</p>
+        <p>After computing the H matrix, I made a function to warp one image to another given the H matrix of the correspondences between the two images, by first using skimage.draw.polygon to get all the points within the bounding box of an image, taking the dot product of H with all these points, and using scipy.interpolate.griddata to interpolate the pixel values from the original image on the new transformed polygon.</p>
+        <p>Before warping the images into mosaics, I used the warp function to rectify two images. The first image was taken from the inside of the Bike Hut in San Gregorio, with a window at a diagonal angle. The other was an image of the outside of a boba shop taken at a diagonal angle. For both of these images, I used the correspondence tool to find the points for each of the four corners of a window in the image, and computed the H matrix for this image and four points that formed a square. Then, I applied my warp function to each image with these H matrices, resulting in the window in each image being transformed into a square shape.</p>
+        <h2 id="subsection">Results</h2>
+        <figure style="margin-left: calc(50% - 410px);">
+            <img id="big" src="imgs/bicehut.png">
+            <figcaption><em><br>Image of the inside of the Bike Hut in San Gregorio<br>with a window seen at an angle</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/bicehut_rect.png">
+            <figcaption><em>The same image, zoomed in on the window<br>and rectified so that the window is a square shape</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 410px);">
+            <img id="big" src="imgs/dessert.png">
+            <figcaption><em><br>Image of a boba shop taken at an angle</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/dessert_rect.png">
+            <figcaption><em>The same image, rectified so that the window<br>is once again a square shape</em></figcaption>
+        </figure>
+        <h1 id="section">Image Mosaics</h1>
+        <h2 id="subsection">Overview</h2>
+        <p>After having created this homography matrix computation function and warp function, I applied it to the sets of images I intended to create mosaics of. For the sets of three images, I first warped the first image to the second, and warped the third image to the second, and combined all of these images. For the two-image mosaic, I simply warped the first image to the second, and combined them.</p>
+        <p>For all of them, I combined them by modifying the alpha values of each image: for each image, before transforming it, I made the alpha values at the horizontal center of the image 1, made the alpha values 0 at the left and right edges, and had the alpha values increase linearly from 0 to 1 towards the center. From here, I took a weighted average of the pixel values for the three images after transformation, with the weights corresponding to the alpha values computed earlier. After averaging this for all pixels, I ended up with a panoramic image mosaic! I dealt with out-of-bounds issues by estimating the width and height of the final mosaic image, and both having the final image initialized with this size, and centered at (0, 0) in the original middle image. This way, even if some of the transformed images had negative position values, they would still be shown in the final image.</p>
+        <p>I applied these steps to three sets of images: three pictures I took inside the VLSB library, three pictures I took from a forest on campus, and two pictures I took from the top of Mt. Constitution on Orcas Island in Washington.</p>
+        <h2 id="subsection">Results</h2>
+        <figure>
+            <img id="big" src="imgs/lib1.png">
+            <figcaption><em>VLSB Library Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/lib2.png">
+            <figcaption><em>VLSB Library Image 2</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/lib3.png">
+            <figcaption><em>VLSB Library Image 3</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 610px);">
+            <img src="imgs/lib_pano.png">
+            <figcaption><em>Mosaic panorama image of VLSB library</em></figcaption>
+        </figure>
+        <br>
+        <figure>
+            <img id="big" src="imgs/vlsb1.png">
+            <figcaption><em>Forest Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/vlsb2.png">
+            <figcaption><em>Forest Image 2</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/vlsb3.png">
+            <figcaption><em>Forest Image 3</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 510px);">
+            <img src="imgs/vlsb_pano.png">
+            <figcaption><em>Mosaic panorama image of forest on campus</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 410px);">
+            <img id="big" src="imgs/orcas1.png">
+            <figcaption><em>Orcas Island Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/orcas2.png">
+            <figcaption><em>Orcas Island Image 2</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 310px);">
+            <img src="imgs/orcas_pano.png">
+            <figcaption><em>Mosaic panorama image taken from Mt. Constitution on Orcas Island in Washington</em></figcaption>
+        </figure>
+        <br>
+        
+    </body>
+
+    <script>
+    </script>
+</html>
+
