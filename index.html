@@ -172,6 +172,87 @@
             <figcaption><em>Mosaic panorama image taken from Mt. Constitution on Orcas Island in Washington</em></figcaption>
         </figure>
         <br>
+        <h1 id="section">Part 2 - Autostitching</h1>
+        <h2 id="subsection">Overview</h2>
+        <p>Once I had working code for creating image mosaics with manual correspondence lists, I proceeded to add new code to create image panoramas automatically, by computationally finding correspondence points.</p>
+        <p>First, I used the Harris corner detection to find possible "corner points" in the image. I did this using the example Python code provided in the project description.</p>
+        <p>After this, I applied the techniques from Section 3 of the paper given to us in the project description to use MOPS to filter out only the top N corner points with sufficient distance from others: specifically, I chose N to be 100 for this project, and sorted points by r_i distance, choosing the top 100 points after sorting. A point's r_i value is calculated as the minimum distance the point is away from another point with a higher Harris Corner score after multiplying by a factor of 0.9 (to account for points that are nearby and have very close Harris Corner values)./p>
+        <p>From here, I had a list of candidate correspondence points in each image, and I generated an 8 by 8 image patch for each corner, by using skimage.transformation.resample to generate an image with 20% of the size of the original image, and use this to have an 8 by 8 patch in the resampled image correspond to a 40 by 40 patch in the original image.</p>
+        <p>Once I had these image patches, I took each patch in Image 1, and found its nearest neighbor in Image 2. To find as many inliers as possible, I used Lowe's Trick to filter points based on the ratio of the match quality with the first nearest neighbor to the match quality with the second nearest neighbor, choosing a parameter of 0.75 for this project (e.g. only choosing points with a nearest-neighbor ratio of less than 0.75).</p>
+        <p>After this, I ran RANSAC 1000 times to find a set of correspondence points containing only inliers. Once I had these points, I ran the correspondence-point-finding algorithm on all of my image pairs from Part 1, and produced image mosaics in the same way using my code from Part 1.</p>
+        <p>In the end, the automatic point finding worked as expected on the library and forest images, and it did not work on the Orcas Island image. This is likely because the Orcas Island image contains less overlap than is recommended (around 20% overlap) and a large portion of the image is either of ocean or blue sky, which are hard to find correspondence points in.</p>
+        <p>To compensate for this, I took one more mosaic images, which is shown here in addition to the ones from Part 1 that the algorithm worked on.</p>
+        <h2 id="subsection">Results</h2>
+        <figure>
+            <img id="big" src="imgs/lib1.png">
+            <figcaption><em>VLSB Library Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/lib2.png">
+            <figcaption><em>VLSB Library Image 2</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/lib3.png">
+            <figcaption><em>VLSB Library Image 3</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 610px);">
+            <img src="imgs/lib_pano.png">
+            <figcaption><em>Mosaic panorama image of VLSB library with manual correspondences</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 610px);">
+            <img src="imgs/lib_pano_auto.png">
+            <figcaption><em>Mosaic panorama image of VLSB library with automatic correspondences</em></figcaption>
+        </figure>
+        <br>
+        <figure>
+            <img id="big" src="imgs/vlsb1.png">
+            <figcaption><em>Forest Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/vlsb2.png">
+            <figcaption><em>Forest Image 2</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/vlsb3.png">
+            <figcaption><em>Forest Image 3</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 510px);">
+            <img src="imgs/vlsb_pano.png">
+            <figcaption><em>Mosaic panorama image of forest on campus with manual correspondences</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 510px);">
+            <img src="imgs/vlsb_pano_auto.png">
+            <figcaption><em>Mosaic panorama image of forest on campus with automatic correspondences</em></figcaption>
+        </figure>
+        <br>
+        <figure>
+            <img id="big" src="imgs/tam1.png">
+            <figcaption><em>Mt. Tamalpais Image 1</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/tam2.png">
+            <figcaption><em>Mt. Tamalpais Image 2</em></figcaption>
+        </figure>
+        <figure>
+            <img id="big" src="imgs/tam3.png">
+            <figcaption><em>Mt. Tamalpais Image 3</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 510px);">
+            <img width=1000 src="imgs/tam_pano.png">
+            <figcaption><em>Mosaic panorama image from the summit of Mt. Tamalpais with manual correspondences</em></figcaption>
+        </figure>
+        <br>
+        <figure style="margin-left: calc(50% - 510px);">
+            <img width=1000 src="imgs/tam_pano_auto.png">
+            <figcaption><em>Mosaic panorama image from the summit of Mt. Tamalpais with automatic correspondences</em></figcaption>
+        </figure>
+        <h1 id="section">Conclusion</h1>
+        <p>Overall, I had a lot of fun working on the project, and learned a lot about image stitching and image mosaics. Learning-wise, the most interesting thing I took away from this project was in the power of the RANSAC algorithm - before learning it in lecture, it didn't seem like it'd be possible to filter out all the outliers from the set of possible correspondences. But with a few fairly simple lines of code implementing RANSAC, it was cool to see that the algorithm magically worked and always selected correct correspondence points whenever possible!</p>
         
     </body>
 
